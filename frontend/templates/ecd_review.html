@@ -1,0 +1,119 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="mb-6">
+    <a href="{{ url_for('dashboard') }}"
+        style="color:var(--primary);text-decoration:none;font-weight:500;font-size:0.875rem;">← Back to Dashboard</a>
+    <h1 class="mt-4">ECD Review: {{ patient.name }}</h1>
+    <p>Submitted on: {{ ecd.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+</div>
+
+<div class="grid grid-2">
+    <!-- Patient Info & Documents -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Patient & Clinical Data</h2>
+        </div>
+
+        <div class="mb-6">
+            <h3>Demographics</h3>
+            <div style="border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem;">
+                <div class="detail-row">
+                    <span class="detail-label">Patient ID</span>
+                    <span class="detail-value">{{ patient._id }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Full Name</span>
+                    <span class="detail-value">{{ patient.name }}</span>
+                </div>
+                <div class="detail-row" style="border-bottom:none;">
+                    <span class="detail-label">Age</span>
+                    <span class="detail-value">{{ patient.age }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-6 border-t pt-4">
+            <h3 class="mb-4">Medical Documents</h3>
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>File</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in records %}
+                        <tr>
+                            <td><span class="badge badge-neutral">{{ record.file_type | title }}</span></td>
+                            <td style="max-width:150px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+                                title="{{ record.file_name }}">{{ record.file_name }}</td>
+                            <td>
+                                <a href="{{ url_for('download_file', filename=record.file_path) }}" target="_blank"
+                                    class="btn btn-secondary"
+                                    style="padding: 0.35rem 0.75rem; font-size:0.75rem;">View</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audit Action -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Audit Classification</h2>
+        </div>
+
+        {% if audit %}
+        <div class="mb-6 p-4 rounded"
+            style="background-color: #F8FAFC; border: 1px solid var(--border); border-radius: 8px; padding: 1rem;">
+            <h3>Current Status: <span class="badge badge-success">{{ audit.status }}</span></h3>
+            <p class="text-muted mt-2" style="font-size:0.875rem;">Audited on: {{ audit.audited_at.strftime('%Y-%m-%d
+                %H:%M') }}</p>
+            {% if audit.notes %}
+            <div class="mt-4 pt-4" style="border-top:1px solid var(--border);">
+                <strong style="font-size:0.875rem;">Audit Notes:</strong>
+                <p class="mt-1">{{ audit.notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+        <hr class="mb-6" style="border:none; border-top:1px solid var(--border); margin:1.5rem 0;">
+        <h3 class="mb-4">Update Classification</h3>
+        {% else %}
+        <div class="mb-6"
+            style="background-color: #FEF3C7; border: 1px solid #FCD34D; border-radius:8px; padding:1rem;">
+            <strong>Status: Needs Audit</strong>
+            <p style="font-size:0.875rem; margin-top:0.5rem; color:#92400E;">Please review the submitted documents and
+                assign an audit classification below.</p>
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('submit_audit', ecd_id=ecd._id) }}">
+            <div class="form-group">
+                <label class="form-label" for="status">Classification</label>
+                <select name="status" id="status" class="form-select" required>
+                    <option value="" disabled {% if not audit %}selected{% endif %}>Select Status...</option>
+                    <option value="ECD1" {% if audit and audit.status=='ECD1' %}selected{% endif %}>ECD1 - Complete &
+                        Accurate</option>
+                    <option value="ECD2" {% if audit and audit.status=='ECD2' %}selected{% endif %}>ECD2 - Minor
+                        Discrepancies</option>
+                    <option value="ECD3" {% if audit and audit.status=='ECD3' %}selected{% endif %}>ECD3 - Major Missing
+                        Information</option>
+                </select>
+            </div>
+
+            <div class="form-group mb-6">
+                <label class="form-label" for="notes">Audit Notes (Optional)</label>
+                <textarea name="notes" id="notes" class="form-control"
+                    placeholder="Add any findings or comments...">{% if audit and audit.notes %}{{ audit.notes }}{% endif %}</textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-full">Save Audit</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

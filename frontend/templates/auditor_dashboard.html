@@ -1,0 +1,46 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="mb-6">
+    <h1>Auditor Dashboard</h1>
+    <p>Review submitted Electronic Clinical Documents (ECDs) and assign audit classifications.</p>
+</div>
+
+<div class="card">
+    {% if ecds %}
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Patient Name</th>
+                    <th>Submitted At</th>
+                    <th>Audit Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ecd in ecds %}
+                <tr>
+                    <td style="font-weight:500;">{{ ecd.patient_name }}</td>
+                    <td>{{ ecd.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>
+                        {% if ecd.audit_status == 'Pending' or ecd.audit_status == 'Pending Audit' %}
+                        <span class="badge badge-warning">Pending Audit</span>
+                        {% else %}
+                        <span class="badge badge-success">{{ ecd.audit_status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('ecd_review', ecd_id=ecd._id) }}" class="btn btn-secondary">Review ECD</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center" style="padding: 4rem 0;">
+        <p>No ECDs have been submitted yet.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

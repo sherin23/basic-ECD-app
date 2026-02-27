@@ -1,0 +1,112 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="mb-6">
+    <a href="{{ url_for('dashboard') }}"
+        style="color:var(--primary);text-decoration:none;font-weight:500;font-size:0.875rem;">← Back to Dashboard</a>
+    <h1 class="mt-4">{{ patient.name }}</h1>
+    <p>Patient ID: {{ patient._id }} &bull; Age: {{ patient.age }}</p>
+</div>
+
+<div class="grid grid-2">
+    <!-- Medical Records Section -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Medical Documents</h2>
+        </div>
+
+        {% if records %}
+        <div class="table-container mb-6">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>File Name</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in records %}
+                    <tr>
+                        <td><span class="badge badge-neutral">{{ record.file_type | title }}</span></td>
+                        <td style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+                            title="{{ record.file_name }}">{{ record.file_name }}</td>
+                        <td>
+                            <a href="{{ url_for('download_file', filename=record.file_path) }}" target="_blank"
+                                class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size:0.75rem;">View</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-center mb-6" style="padding: 2rem 0;">No medical documents uploaded yet.</p>
+        {% endif %}
+
+        {% if not ecd %}
+        <div style="margin-top:2rem; padding-top:1.5rem; border-top:1px solid var(--border);">
+            <h3 class="mb-4">Upload Document</h3>
+            <form method="POST" action="{{ url_for('upload_document', patient_id=patient._id) }}"
+                enctype="multipart/form-data">
+                <div class="form-group">
+                    <label class="form-label" for="file_type">Document Type</label>
+                    <select name="file_type" id="file_type" class="form-select">
+                        <option value="scan">Scanned Report</option>
+                        <option value="blood_test">Blood Test Result</option>
+                        <option value="prescription">Prescription</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="file">Select File</label>
+                    <input type="file" id="file" name="file" class="form-control" required
+                        accept=".pdf,.png,.jpg,.jpeg">
+                </div>
+                <button type="submit" class="btn btn-secondary w-full">Upload Document</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ECD Submission Section -->
+    <div class="card">
+        <div class="card-header">
+            <h2>ECD Status</h2>
+        </div>
+
+        {% if ecd %}
+        <div class="text-center" style="padding:3rem 1rem;">
+            <div style="font-size: 3.5rem; color: var(--secondary); margin-bottom: 1rem;">✓</div>
+            <h3>ECD Submitted</h3>
+            <p>Status:
+                {% if ecd.status == 'Pending Audit' %}
+                <span class="badge badge-warning">{{ ecd.status }}</span>
+                {% elif ecd.status.startswith('ECD') %}
+                <span class="badge badge-success">{{ ecd.status }}</span>
+                {% else %}
+                <span class="badge badge-info">{{ ecd.status }}</span>
+                {% endif %}
+            </p>
+            <p class="text-muted mt-2">Submitted on {{ ecd.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+        </div>
+        {% else %}
+        <div class="text-center" style="padding:3rem 1rem;">
+            <div style="font-size: 3.5rem; color: #9CA3AF; margin-bottom: 1rem;">📑</div>
+            <h3>Not Submitted</h3>
+            <p>Upload all necessary medical documents before submitting the Electronic Clinical Document (ECD).</p>
+
+            <form method="POST" action="{{ url_for('submit_ecd', patient_id=patient._id) }}" class="mt-6">
+                <button type="submit" class="btn btn-primary w-full" {% if not records %}disabled
+                    title="Upload at least one document" style="opacity:0.6;cursor:not-allowed;" {% endif %}>
+                    Submit Complete ECD
+                </button>
+            </form>
+            {% if not records %}
+            <p style="font-size:0.75rem; color:var(--danger); margin-top:0.5rem;">Requires at least 1 document uploaded.
+            </p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

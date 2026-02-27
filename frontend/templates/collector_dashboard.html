@@ -1,0 +1,47 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+    <div>
+        <h1>Collector Dashboard</h1>
+        <p>Manage your patient records and ECD submissions</p>
+    </div>
+    <a href="{{ url_for('create_patient') }}" class="btn btn-primary">
+        + New Patient
+    </a>
+</div>
+
+<div class="card">
+    {% if patients %}
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Patient Name</th>
+                    <th>Age</th>
+                    <th>Created At</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for patient in patients %}
+                <tr>
+                    <td style="font-weight:500;">{{ patient.name }}</td>
+                    <td>{{ patient.age }}</td>
+                    <td>{{ patient.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>
+                        <a href="{{ url_for('patient_view', patient_id=patient._id) }}" class="btn btn-secondary">View
+                            Record</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center" style="padding: 4rem 0;">
+        <p style="margin-bottom: 1.5rem;">No patients found. Create one to get started.</p>
+        <a href="{{ url_for('create_patient') }}" class="btn btn-primary">Create Patient</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
